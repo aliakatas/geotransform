@@ -8,6 +8,38 @@ Additionally, discussion threads ([here](https://gis.stackexchange.com/questions
 
 This is meant to simplify the creation and use of geotransforms in GIS applications written in C++.
 
+## What's included
+
+- **`Geotransform`** (`include/geotransform/geotransform.hpp`): a small template class (typically `float`, `double`, or `long double`) that stores the six GDAL-style coefficients, builds them from corner metadata or an existing array, maps pixel indices to world coordinates (`apply`), performs the inverse (`invert`), and can recover rotation and pixel size (`decrypt`). The affine model matches [GDAL's geotransform tutorial](https://gdal.org/en/latest/tutorials/geotransforms_tut.html).
+- **Utilities** (`include/geotransform/geotransform_operations.hpp`): helpers such as degree/radian conversion, angle wrapping, compass/meteorological angle conversions, 2D rotation matrices, and point rotation/translation—used by `Geotransform` and usable on their own.
+
+The library is **header-only**: add the `include` directory to your compiler's include path and `#include` the headers you need; no separate linking step is required beyond the C++ standard library and `<cmath>`.
+
+## Requirements
+
+- **CMake** 3.14 or newer (for the bundled build and tests).
+- A **C++17** compiler.
+- **Tests** use [doctest](https://github.com/doctest/doctest) from `extern/doctest` (vendored in this repository).
+
+## Layout
+
+| Path | Role |
+|------|------|
+| `include/geotransform/` | Public headers (`geotransform.hpp`, `geotransform_operations.hpp`) |
+| `examples/` | Sample programs (`example_geotransform_simple`, `example_geotransform_advanced`) |
+| `tests/` | Unit tests (doctest) |
+| `extern/doctest/` | Test framework (not needed for embedding the library in your app) |
+
+## Using the library in another project
+
+Point your target's include directories at this repository's `include` folder (or install/copy the headers), then:
+
+```cpp
+#include "geotransform/geotransform.hpp"
+```
+
+On **MSVC**, defining `_USE_MATH_DEFINES` before including system headers (or via `target_compile_definitions`) ensures `M_PI` and related constants are available where `<cmath>` is used.
+
 ## How to build and test
 
 As usual, build with the following:
@@ -33,3 +65,8 @@ To run the examples, execute the following:
 ./build/examples/example_geotransform_advanced
 ```
 
+On Windows, the executables are typically under `build\examples\Release\` or `build\examples\Debug\` depending on the generator and configuration.
+
+## License
+
+This project is released under the MIT License; see [LICENSE](LICENSE).
