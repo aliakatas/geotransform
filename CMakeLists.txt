@@ -3,4 +3,5 @@ project(geotransform LANGUAGES CXX)
 
 include(CTest)
 
+add_subdirectory(examples)
 add_subdirectory(tests)
