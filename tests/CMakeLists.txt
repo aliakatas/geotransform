@@ -19,7 +19,27 @@ if(MSVC)
   target_compile_definitions(test_geotransform_utilities PRIVATE _USE_MATH_DEFINES)
 endif()
 
+add_executable(test_geotransform
+  test_geotransform.cxx
+)
+
+target_include_directories(test_geotransform PRIVATE
+  "${_GEOTRANSFORM_ROOT}/include"
+  "${_GEOTRANSFORM_ROOT}/extern/doctest"
+)
+
+target_compile_features(test_geotransform PRIVATE cxx_std_17)
+
+if(MSVC)
+  target_compile_definitions(test_geotransform PRIVATE _USE_MATH_DEFINES)
+endif()
+
 add_test(
   NAME test_geotransform_utilities
   COMMAND "$<TARGET_FILE:test_geotransform_utilities>"
+)
+
+add_test(
+  NAME test_geotransform
+  COMMAND "$<TARGET_FILE:test_geotransform>"
 )
