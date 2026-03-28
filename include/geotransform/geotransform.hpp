@@ -14,6 +14,9 @@ namespace geotransform
    template <typename data_t>
    class Geotransform
    {
+      template <typename U>
+      friend class Geotransform;
+
    public:
 
       Geotransform() = default;
