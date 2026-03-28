@@ -36,8 +36,8 @@ int main()
    double dx = 0.0;
    double dy = 0.0;
    double ang = 0.0;
-   rotated.decrypt_geotransform(&ox, &oy, &dx, &dy, &ang);
-   std::cout << "decrypt_geotransform: origin (" << ox << ", " << oy << "), "
+   rotated.decrypt(&ox, &oy, &dx, &dy, &ang);
+   std::cout << "decrypt: origin (" << ox << ", " << oy << "), "
              << "dx=" << dx << ", dy=" << dy << ", angle_rad=" << ang
              << " (~" << (ang * 180.0 / M_PI) << " deg)\n";
 

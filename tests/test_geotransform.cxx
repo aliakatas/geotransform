@@ -35,7 +35,7 @@ TEST_CASE("default construction is not initialized")
    double dx = 0.0;
    double dy = 0.0;
    double ang = 0.0;
-   CHECK_THROWS_AS(gt.decrypt_geotransform(&xtl, &ytl, &dx, &dy, &ang), std::runtime_error);
+   CHECK_THROWS_AS(gt.decrypt(&xtl, &ytl, &dx, &dy, &ang), std::runtime_error);
 }
 
 TEST_CASE("constructor from array")
@@ -124,7 +124,7 @@ TEST_CASE("invert round-trips apply for rotated geotransform")
    CHECK(icol == 5);
 }
 
-TEST_CASE("decrypt_geotransform recovers north-up parameters")
+TEST_CASE("decrypt recovers north-up parameters")
 {
    Geotransform<double> gt;
    gt.set(100.0, 200.0, 10.0, 10.0, 0.0);
@@ -133,7 +133,7 @@ TEST_CASE("decrypt_geotransform recovers north-up parameters")
    double dx = 0.0;
    double dy = 0.0;
    double ang = 0.0;
-   gt.decrypt_geotransform(&xtl, &ytl, &dx, &dy, &ang);
+   gt.decrypt(&xtl, &ytl, &dx, &dy, &ang);
    CHECK(xtl == doctest::Approx(100.0));
    CHECK(ytl == doctest::Approx(200.0));
    CHECK(dx == doctest::Approx(10.0));
@@ -141,7 +141,7 @@ TEST_CASE("decrypt_geotransform recovers north-up parameters")
    CHECK(ang == doctest::Approx(0.0).epsilon(1e-9));
 }
 
-TEST_CASE("decrypt_geotransform round-trip for non-zero rotation")
+TEST_CASE("decrypt round-trip for non-zero rotation")
 {
    const double x0 = 12.5;
    const double y0 = -3.25;
@@ -157,7 +157,7 @@ TEST_CASE("decrypt_geotransform round-trip for non-zero rotation")
    double dx = 0.0;
    double dy = 0.0;
    double ang = 0.0;
-   gt.decrypt_geotransform(&xtl, &ytl, &dx, &dy, &ang);
+   gt.decrypt(&xtl, &ytl, &dx, &dy, &ang);
 
    CHECK(xtl == doctest::Approx(x0).epsilon(1e-12));
    CHECK(ytl == doctest::Approx(y0).epsilon(1e-12));

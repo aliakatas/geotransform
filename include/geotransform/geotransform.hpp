@@ -218,7 +218,7 @@ namespace geotransform
        */
       template <typename T>
       typename std::enable_if<std::is_floating_point<T>::value, void>::type
-      decrypt_geotransform(T* x_top_left, T* y_top_left,
+      decrypt(T* x_top_left, T* y_top_left,
          T* dx, T* dy, T* angle_rad) const
       {
          if (!m_initialized)
