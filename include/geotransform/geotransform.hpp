@@ -4,9 +4,12 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <type_traits>
+#include <string>
 
 namespace geotransform
 {
+   const std::string ERROR_MESSAGE_GEOTRANSFORM_NOT_INITIALIZED{ "Geotransform object not initialized." };
 
    template <typename data_t>
    class Geotransform
@@ -15,6 +18,34 @@ namespace geotransform
 
       Geotransform() = default;
       ~Geotransform() = default;
+
+      /**
+       * @brief Creates a geotransform object from an existing geotransform array.
+       * 
+       * @tparam T The data type. Supports float, double and long double.
+       * @param gt_array The geotransform array with 6 elements to copy from.
+       */
+      template <typename T>
+      Geotransform(const T gt_array[6]) : 
+         p_gt{ static_cast<data_t>(gt_array[0]), static_cast<data_t>(gt_array[1]), static_cast<data_t>(gt_array[2]), static_cast<data_t>(gt_array[3]), static_cast<data_t>(gt_array[4]), static_cast<data_t>(gt_array[5]) },
+         m_initialized(true) 
+      {}
+
+      /**
+       * @brief Copy constructor.
+       *
+       * @param other The geotransform to copy from.
+       */
+      template <typename T>
+      Geotransform(const Geotransform<T>& other) :
+         p_gt{ static_cast<data_t>(other.p_gt[0]), 
+            static_cast<data_t>(other.p_gt[1]), 
+            static_cast<data_t>(other.p_gt[2]), 
+            static_cast<data_t>(other.p_gt[3]), 
+            static_cast<data_t>(other.p_gt[4]), 
+            static_cast<data_t>(other.p_gt[5]) },
+         m_initialized(other.m_initialized)
+      {}
 
       /**
        * @brief Sets the geotransform array by copying from an existing array.
@@ -29,7 +60,7 @@ namespace geotransform
          for (size_t i = 0; i < 6; ++i)
             p_gt[i] = static_cast<data_t>(gt_array[i]);
             
-         initialized = true;
+         m_initialized = true;
       }
 
       /**
@@ -49,8 +80,8 @@ namespace geotransform
          const T x_top_left, const T y_top_left, 
          const T dx, const T dy, const T angle_rad)
       {
-         set_geotransform(x_top_left, y_top_left, dx, dy, angle_rad);
-         initialized = true;
+         _set_geotransform(x_top_left, y_top_left, dx, dy, angle_rad);
+         m_initialized = true;
       }
 
       /**
@@ -67,21 +98,22 @@ namespace geotransform
        * @param angle_rad [in] Angle of rotation of the image in radians.
        * @param height [in] The height of the image/grid in number of pixels/rows.
        */
-      template <typename T>
-      typename std::enable_if<std::is_floating_point<T>::value, void>::type
+      template <typename T, typename index_t>
+      typename std::enable_if<std::is_floating_point<T>::value && 
+      std::is_integral<index_t>::value, void>::type
       set(
          const T x_bottom_left, const T y_bottom_left, 
-         const T dx, const T dy, const T angle_rad)
+         const T dx, const T dy, const T angle_rad, const index_t height)
       {
          data_t rotation_matrix[4];
          calculate_rotation_matrix(angle_rad, rotation_matrix);
          
          T x = x_bottom_left;
-         T y = y_bottom_left - nrows * dy; // nrows is correct as we need to account for the size of the last cell.
+         T y = y_bottom_left - height * dy; // height is correct as we need to account for the size of the last cell. Otherwise, it would have been height - 1.
          rotate_point_about(&x, &y, rotation_matrix, x_bottom_left, y_bottom_left);
 
-         set_geotransform(x, y, dx, dy, angle_rad);
-         initialized = true;
+         _set_geotransform(x, y, dx, dy, angle_rad);
+         m_initialized = true;
       }
 
       /**
@@ -92,8 +124,9 @@ namespace geotransform
        */
       const data_t* get() const noexcept(false)
       { 
-         if (!initialized)
-            throw std::runtime_error("Geotransform object not initialized.");
+         if (!m_initialized)
+            throw std::runtime_error(std::string(__FUNCTION__) + 
+               std::string(": ") + ERROR_MESSAGE_GEOTRANSFORM_NOT_INITIALIZED);
             
          return p_gt; 
       }
@@ -111,6 +144,7 @@ namespace geotransform
        * @param y [out] y-coordinate of the point (pixel).
        * @param irow [in] The row index to use for the pixel.
        * @param icol [in] The column index to use for the pixel.
+       * @throws std::runtime_error if the geotransform object is not initialized.
        */
       template <typename T, typename index_t>
       typename std::enable_if<std::is_floating_point<T>::value && 
@@ -118,6 +152,10 @@ namespace geotransform
       apply(T* x, T* y, 
          const index_t irow, const index_t icol) const
       {
+         if (!m_initialized)
+            throw std::runtime_error(std::string(__FUNCTION__) + 
+               std::string(": ") + ERROR_MESSAGE_GEOTRANSFORM_NOT_INITIALIZED);
+
          *x = static_cast<T>(p_gt[0] + icol * p_gt[1] + irow * p_gt[2]);
          *y = static_cast<T>(p_gt[3] + icol * p_gt[4] + irow * p_gt[5]);
       }
@@ -138,6 +176,7 @@ namespace geotransform
        * @param x [in] x-coordinate of the pixel.
        * @param y [in] y-coordinate of the pixel.
        * @param geotransform [in] The geotransform array.
+       * @throws std::runtime_error if the geotransform object is not initialized.
        */
       template <typename index_t, typename T>
       typename std::enable_if<
@@ -146,6 +185,10 @@ namespace geotransform
       invert(index_t* irow, index_t* icol, 
          const T x, const T y) const
       {
+         if (!m_initialized)
+            throw std::runtime_error(std::string(__FUNCTION__) + 
+               std::string(": ") + ERROR_MESSAGE_GEOTRANSFORM_NOT_INITIALIZED);
+
          T Dx = static_cast<T>(x - p_gt[0]);
          T Dy = static_cast<T>(y - p_gt[3]);
 
@@ -168,10 +211,17 @@ namespace geotransform
        * @param dx [out] x-coordinate of the image resolution. For rotated images, it corresponds to the "horizontal" analysis if the image was north-up.
        * @param dy [out] y-coordinate of the image resolution. For rotated images, it corresponds to the "vertical" analysis if the image was north-up.
        * @param angle_rad [out] Angle of rotation of the image in radians.
+       * @throws std::runtime_error if the geotransform object is not initialized.
        */
-      void decrypt_geotransform(T* x_top_left, T* y_top_left,
+      template <typename T>
+      typename std::enable_if<std::is_floating_point<T>::value, void>::type
+      decrypt_geotransform(T* x_top_left, T* y_top_left,
          T* dx, T* dy, T* angle_rad) const
       {
+         if (!m_initialized)
+            throw std::runtime_error(std::string(__FUNCTION__) + 
+               std::string(": ") + ERROR_MESSAGE_GEOTRANSFORM_NOT_INITIALIZED);
+
          // Get the origin
          *x_top_left = static_cast<T>(p_gt[0]);
          *y_top_left = static_cast<T>(p_gt[3]);
@@ -189,7 +239,7 @@ namespace geotransform
       }
 
    private:
-      bool initialized = false;
+      bool m_initialized = false;
       data_t p_gt[6];
       
       /**
@@ -207,7 +257,7 @@ namespace geotransform
        */
       template <typename T>
       typename std::enable_if<std::is_floating_point<T>::value, void>::type
-      set_geotransform(
+      _set_geotransform(
          const T x_top_left, const T y_top_left, 
          const T dx, const T dy, const T angle_rad)
       {
