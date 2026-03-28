@@ -21,6 +21,17 @@ The library is **header-only**: add the `include` directory to your compiler's i
 - A **C++17** compiler.
 - **Tests** use [doctest](https://github.com/doctest/doctest) from `extern/doctest` (vendored in this repository).
 
+### Cloning
+To clone the repo and pull all its submodules in one go, run the following:
+```bash
+git clone --recurse-submodules git@github.com:aliakatas/geotransform.git
+```
+
+If you've **already cloned** the repo without the flag and need to pull the submodules after the fact, run the following:
+```bash
+git submodule update --init --recursive
+```
+
 ## Layout
 
 | Path | Role |
