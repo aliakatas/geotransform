@@ -19,3 +19,10 @@ or more verbose with:
 ```bash
 ctest --test-dir build --rerun-failed --output-on-failure
 ```
+
+To run the examples, execute the following:
+```bash
+./build/examples/example_geotransform_simple
+./build/examples/example_geotransform_advanced
+```
+
