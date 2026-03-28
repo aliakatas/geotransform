@@ -5,6 +5,7 @@
 #endif
 
 #include <cmath>
+#include <type_traits>
 
 #define ONE_EIGHTY_DEG           180.0
 
